@@ -1,0 +1,116 @@
+------
+4.1.1
+
+
+> DELIMITER //
+ CREATE PROCEDURE get_ppl_visited_country
+    (IN input VARCHAR(52))
+     BEGIN
+       SELECT
+         p.personid,
+         p.personname,
+         c.name,
+         h.dateArrived,
+         n.name
+     FROM world.hasvisitedcity as h
+     left join city as c
+     on c.ID=h.cityID
+     left join person as p
+     on p.personID=h.personID
+     left join country as n
+     on n.Code=c.CountryCode
+     left join countrylanguage as l
+     on l.CountryCode=c.CountryCode
+     WHERE n.name like CONCAT('%', input, '%');
+     END //
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> DELIMITER ;
+
+
+------
+4.1.2
+
+
+> Delimiter //
+mysql> Create function ren_continent(c  enum('Asia','Europe','North America','Africa','Oceania','Antarctica','South America'))
+    -> Returns varchar(20)
+    -> DETERMINISTIC
+    -> Begin
+    -> If c  = "Antarctica" then
+    ->     Return "South Pole";
+    -> Elseif c = "Oceania" then
+    ->    Return "Australia";
+    -> Elseif c = "North America" then
+    ->    Return "Americas";
+    -> Elseif c = "South America" then
+    ->    Return "Americas";
+    -> Else
+    ->    Return"";
+    -> End if;
+    -> End
+    -> //
+
+select continent as "original name", ren_continent(continent) as "new name" from country group by continent ;
+
+
+------
+4.1.3
+
+Select max(population) as Biggest, Continent, localname as Country from country group by Continent having biggest >1;
+
+-----
+4.1.4
+
+
+> SELECT
+    ->      c.name as "City Name",
+    ->      min(c.population) as "Lowest Population"
+    ->   FROM world.hasvisitedcity as v
+    -> left join city as c
+    -> on c.ID=v.cityID
+    -> left join person as p
+    -> on p.personID=v.personID
+    ->
+    ->
+    -> WHERE age = (SELECT min(age) FROM person)
+    -> ;
+
+
+
+
+-----
+4.1.5
+ UPDATE city
+    -> SET population =
+    ->   CASE
+    ->     WHEN District="Eastern Cape" Then Population + 1000
+    ->     WHEN District="Free State" Then Population + 2000
+    ->     WHEN District="Western Cape" Then population - 10000
+    ->     ELSE population
+    ->     END
+    -> ;
+
+
+-----
+4.1.6
+
+> select Name as "Country Name", IndepYear as "Year of Independance",
+    -> (
+    ->     CASE
+    ->         WHEN indepyear IS NULL THEN "n/a"
+    ->         WHEN( YEAR(CURDATE()) - indepyear < '10' AND Population  < 100000000 )THEN Concat("New" ," "  ,governmentform)
+    ->         WHEN( YEAR(CURDATE()) - indepyear < '10' AND Population  >= 100000000 )THEN Concat("New" ," " ,"Large" ," ",governmentform)
+    ->         WHEN (YEAR(CURDATE()) - indepyear < '50' AND Population  < 100000000 ) THEN Concat("Modern" ," "  ,governmentform)
+    ->         WHEN (YEAR(CURDATE()) - indepyear < '50'  AND Population  >= 100000000  )THEN Concat("Modern" ," " ,"Large"  ," "  ,governmentform)
+    ->         WHEN( YEAR(CURDATE()) - indepyear < '100'  AND Population  < 100000000 ) THEN Concat("Early"," " ,governmentform)
+    ->         WHEN (YEAR(CURDATE()) - indepyear < '100'  AND Population  >= 100000000 ) THEN Concat("Early" ," " ,"Large"," " ,governmentform)
+    ->         WHEN( YEAR(CURDATE()) - indepyear >= '100' AND Population  < 100000000 ) THEN Concat("Old" ," "  ,governmentform)
+    ->         WHEN (YEAR(CURDATE()) - indepyear >= '100'  AND Population  >= 100000000  )THEN Concat("Old" ," " ,"Large"," "  ,governmentform)
+    ->         ELSE ""
+    ->     END) AS "DESC"
+    -> From country;
+
+
+
+-----
